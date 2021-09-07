@@ -47,7 +47,7 @@ The `IP` option allows you to specify the IP Address you want your DNS records p
 
 You can
 - directly specify an IP Address in the script (`'127.0.0.1'`, `'1.1.1.1'`, ...)
-- have the script automatically detect your public IP Address through [ipify](https://ipify.org) (`'AUTO'`)
+- have the script automatically detect your public IP Address through [ipify](https://www.ipify.org) (`'AUTO'`)
 - define an IP Address using command-line arguments (`'ARG'`, execute like `python3 one_com_ddns.py 127.0.0.1`)
 ```python
 IP='127.0.0.1'
