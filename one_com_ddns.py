@@ -97,7 +97,7 @@ def findBetween(haystack, needle1, needle2):
 
 
 # will create a requests session and log you into your one.com account in that session
-def loginSession(USERNAME,  PASSWORD):
+def loginSession(USERNAME,  PASSWORD, TARGET_DOMAIN=''):
     print("Logging in...")
 
     # create requests session
@@ -118,7 +118,17 @@ def loginSession(USERNAME,  PASSWORD):
 
     print("Sent Login Data")
 
+    # For accounts with multiple domains it seems to still be needed to select which target domain to operate on.
+    if TARGET_DOMAIN:
+        print("Setting active domain to: {}".format(TARGET_DOMAIN))
+        selectAdminDomain(session, TARGET_DOMAIN)
+
     return session
+
+
+def selectAdminDomain(session, DOMAIN):
+    request_str = "https://www.one.com/admin/select-admin-domain.do?domain={}".format(DOMAIN)
+    session.get(request_str)
 
 
 # gets all DNS records on your domain.
@@ -156,7 +166,7 @@ def changeIP(session, ID, DOMAIN, SUBDOMAIN, IP, TTL=3600):
 
 
 # Create login session
-s = loginSession(USERNAME, PASSWORD)
+s = loginSession(USERNAME, PASSWORD, DOMAIN)
 
 # get dns records
 records = getCustomRecords(s, DOMAIN)
