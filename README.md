@@ -5,7 +5,6 @@ The name is pretty self explanatory. It's a Python script for updating type A DN
 ## Required Packages
 - `requests`
 - `json`
-- `os`
 - `sys`
 
 ## Usage
@@ -77,5 +76,4 @@ Any feature requests are welcome as well.
 
 ## Need Help?
 Don't hesitate to contact me:
-- [me@lugico.de](mailto:me@lugico.de)
-- Discord: Lugico#4952
+- [main@lugico.de](mailto:main@lugico.de)

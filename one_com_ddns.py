@@ -9,14 +9,14 @@
     +--------------+----------------+
     | Last Updated | 2022-04-02     |
     +--------------+----------------+
-    
+
     +----------------+-------------------------+
     | Initial Author | Lugico <main@lugico.de> |
     +----------------+-------------------------+
     | Contributors   | Vigge                   |
     +----------------+-------------------------+
-    
-    
+
+
 
 
     Note:
@@ -63,7 +63,6 @@ LAST_IP_FILE = "lastip.txt"
 
 import requests
 import json
-import os
 import sys
 
 if IP == 'AUTO':
