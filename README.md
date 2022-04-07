@@ -69,6 +69,26 @@ CHECK_IP_CHANGE = True
 LAST_IP_FILE = "lastip.txt"
 ```
 
+## Docker
+
+To build docker from dockerfile: Replace imagenamexyz with your own
+```
+docker build --rm -f "dockerfile" -t imagenameXYZ:tag . 
+```
+Dockercompose example:
+```
+version: '3.3'
+services:
+   one:
+     image: imagenameXYZ:latest
+     environment:
+      - Username=example@domain.com
+      - Password=pwd
+      - Domain=domain.com
+      - SubDomains=sub
+```
+
+
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 

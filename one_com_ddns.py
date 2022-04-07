@@ -29,30 +29,35 @@
         on github or send me an email (main@lugico.de)
 
 '''
-
-
+import os
+import requests
+import json
+import sys
 
 # YOUR ONE.COM LOGIN
-USERNAME="email.address@example.com"
-PASSWORD="Your Beautiful Password"
-
+#USERNAME="email.address@example.com"
+USERNAME = os.getenv('Username')
+#PASSWORD="Your Beautiful Password"
+PASSWORD = os.getenv('Password')
 # YOUR DOMAIN ( NOT www.example.com, only example.com )"
-DOMAIN="example.com"
-
+#DOMAIN="example.com"
+DOMAIN = os.getenv('Domain')
 # LIST OF SUBDOMAINS YOU WANT POINTING TO YOUR IP
-SUBDOMAINS = ["myddns"]
+#SUBDOMAINS = ["myddns"]
 # SUBDOMAINS = ["mutiple", "subdomains"]
-
+SUBDOMAINS = os.getenv('SubDomains').split(',')
 
 # YOUR IP ADDRESS.
-IP='AUTO'
+#IP='AUTO'
+IP = os.getenv('IP','AUTO')
 # '127.0.0.1' -> IP  Address
 # 'AUTO'      -> Automatically detect using ipify.org
 # 'ARG'       -> Read from commandline argument ($ python3 ddns.py 127.0.0.1)
 
 
 # CHECK IF IP ADDRESS HAS CHANGED SINCE LAST SCRIPT EXECUTION?
-CHECK_IP_CHANGE = True
+#CHECK_IP_CHANGE = True
+CHECK_IP_CHANGE = os.getenv('Change','true').lower() == 'true'
 # True = only continue when IP has changed
 # False = always continue
 
@@ -60,10 +65,7 @@ CHECK_IP_CHANGE = True
 # not needed CHECK_IP_CHANGE is false
 LAST_IP_FILE = "lastip.txt"
 
-
-import requests
-import json
-import sys
+print(f"Running with options USERNAME: {USERNAME}, DOMAIN:{DOMAIN} SUBDomains: {SUBDOMAINS} IPMode: {IP}, Change detection: {CHECK_IP_CHANGE}")
 
 if IP == 'AUTO':
     IP = requests.get("https://api.ipify.org/").text
