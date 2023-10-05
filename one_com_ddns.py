@@ -66,12 +66,15 @@ import json
 import sys
 
 if IP == 'AUTO':
-    IP = requests.get("https://api.ipify.org/").text
+    print("Fetching IP Address...")
+    try:
+        IP = requests.get("https://api.ipify.org/").text
+    except requests.ConnectionError:
+        raise SystemExit("Failed to get IP Address from ipify")
     print(f"Detected IP: {IP}")
 elif IP == 'ARG':
     if (len(sys.argv) < 2):
-        raise Exception('No IP Adress provided in commandline parameters')
-        exit()
+        raise SystemExit('No IP Address provided in commandline arguments')
     else:
         IP = sys.argv[1]
 
@@ -106,7 +109,10 @@ def loginSession(USERNAME,  PASSWORD, TARGET_DOMAIN=''):
 
     # get admin panel to be redirected to login page
     redirectmeurl = "https://www.one.com/admin/"
-    r = session.get(redirectmeurl)
+    try:
+        r = session.get(redirectmeurl)
+    except requests.ConnectionError:
+        raise SystemExit("Connection to one.com failed.")
 
     # find url to post login credentials to from form action attribute
     substrstart = '<form id="kc-form-login" class="Login-form login autofill" onsubmit="login.disabled = true; return true;" action="'
