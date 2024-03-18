@@ -18,6 +18,9 @@ USERNAME="email.address@example.com"
 PASSWORD="Your Beautiful Password"
 ```
 
+Currently this script does not support Two Factor Authentication. If you have Two Factor Authentication enabled for your one.com account,
+you will need to disable it prior to using this script.
+
 ### Domain
 Since you can have multiple domains on one account you need to specify which domain's DNS records you want to edit.
 ```python
