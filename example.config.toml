@@ -1,0 +1,26 @@
+# Your one.com login.
+username="email.address@example.com"
+password="Your Beautiful Password"
+
+# Your domain ( Not www.example.com, only example.com ).
+domain="example.com"
+
+# List of subdomains you want pointing to your ip.
+subdomains = ["myddns"]
+# subdomains = ["mutiple", "subdomains"]
+
+# Your ip address.
+ip="auto"
+# 'const:127.0.0.1' -> IP Address.
+# 'auto'            -> Automatically detect using ipify.org .
+# 'arg'             -> Read from commandline argument (example: $ python3 ddns.py 127.0.0.1).
+
+
+# Check if ip address has changed since last script execution?
+check_ip_change = true
+# true = only continue when ip has changed.
+# false = always continue.
+
+# Cache path where last ip should be saved inbetween script executions.
+# Not needed if check_ip_change is set to false.
+last_ip_cache = "/var/run/one.com-ddns-python-script/lastip.txt"
