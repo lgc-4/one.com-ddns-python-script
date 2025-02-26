@@ -3,9 +3,7 @@
 The name is pretty self explanatory. It's a Python script for updating type A DNS records at one.com.
 
 ## Required Packages
-- `requests`
-- `json`
-- `sys`
+Check requirements.txt
 
 ## Usage
 At the very top of the Script there are some customization options and variables for your one.com control panel login credentials.

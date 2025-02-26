@@ -29,7 +29,8 @@
 import modules.dns_utils as dns_utils
 import modules.one_com_config as config
 import modules.one_com_api as one_com_api
-import modules.logger as logger_module  # Import the logger module
+import modules.logger as logger_module
+import modules.update_utils as update_utils
 
 logger = logger_module.setup_logging()  # Setup logging
 
@@ -67,12 +68,9 @@ s = one_com_api.login_session(USERNAME, PASSWORD)
 for DOMAIN in DOMAINS:
     print()
     logger.info(f"Processing domain: {DOMAIN}")
-    one_com_api.select_admin_domain(s, DOMAIN)  # Select domain at the beginning of each domain loop
-
-    # get dns records for the current domain
+    one_com_api.select_admin_domain(s, DOMAIN)
     records = one_com_api.get_custom_records(s, DOMAIN)
 
-    # Check current IP from DNS
     logger.info(f"Attempting to get current DNS IP for: {DOMAIN}")
     current_dns_ip_info = dns_utils.get_ip_and_ttl(DOMAIN)
 
@@ -84,38 +82,9 @@ for DOMAIN in DOMAINS:
             logger.info(f"IP Address hasn't changed for {DOMAIN}. Aborting update for this domain.")
             continue
 
-        # change ip address
-        record_obj = one_com_api.find_id_by_subdomain(records, DOMAIN)
-        if record_obj is None:
-            logger.error(f"Record '{DOMAIN}' could not be found.")
-            continue
-
-        # Ask for confirmation before changing
-        logger.warning(f"Changing IP for {DOMAIN} from {current_dns_ip} to {IP} with TTL {TTL}.")
-        if settings.skip_confirmation:
-            one_com_api.change_ip(s, record_obj, DOMAIN, IP, TTL)
-        else:
-            confirmation = input("Do you want to proceed? (y/n): ")
-            if confirmation.lower() == 'y':
-                one_com_api.change_ip(s, record_obj, DOMAIN, IP, TTL)
-            else:
-                logger.info(f"Update for {DOMAIN} cancelled.")
-
+        update_utils.update_domain(s, DOMAIN, records, IP, TTL, current_dns_ip, SKIP_CONFIRMATION)
     else:
         logger.warning(f"Could not retrieve current DNS IP for {DOMAIN} after multiple retries. Proceeding with update anyway.")
-        record_obj = one_com_api.find_id_by_subdomain(records, DOMAIN)
-        if record_obj is None:
-            logger.error(f"Record '{DOMAIN}' could not be found.")
-            continue
-
-        logger.info(f"Changing IP for {DOMAIN} to {IP} with TTL {TTL}.")
-        if settings.skip_confirmation:
-            one_com_api.change_ip(s, record_obj, DOMAIN, IP, TTL)
-        else:
-            confirmation = input("Do you want to proceed? (y/n): ")
-            if confirmation.lower() == 'y':
-                one_com_api.change_ip(s, record_obj, DOMAIN, IP, TTL)
-            else:
-                logger.info(f"Update for {DOMAIN} cancelled.")
+        update_utils.update_domain(s, DOMAIN, records, IP, TTL, None, SKIP_CONFIRMATION)
 
 logger.info("DDNS update process completed.")

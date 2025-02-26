@@ -9,7 +9,7 @@ logger = logging.getLogger("one_com_ddns")
 def parse_config(validate_required=True):
     """
     Parses configuration for the one.com DDNS script from command-line arguments,
-    environment variables (ONECOM_*), and returns None as default if no value is set.
+    environment variables, and returns None as default if no value is set.
 
     Configuration is prioritized: command-line arguments > environment variables > None (if unset).
 
@@ -34,33 +34,33 @@ def parse_config(validate_required=True):
     """
     parser = argparse.ArgumentParser(description="one.com DDNS Script Configuration")
 
-    parser.add_argument("-u", "--username", help="one.com username", default=os.environ.get("ONECOM_USERNAME"))
-    parser.add_argument("-p", "--password", help="one.com password", default=os.environ.get("ONECOM_PASSWORD"))
-    env_onecome_domains = os.environ.get("ONECOM_DOMAINS")
-    if env_onecome_domains is not None:
-        env_onecome_domains = env_onecome_domains.split(',')
+    parser.add_argument("-u", "--username", help="one.com username", default=os.environ.get("USERNAME"))
+    parser.add_argument("-p", "--password", help="one.com password", default=os.environ.get("PASSWORD"))
+    env_domains = os.environ.get("DOMAINS")
+    if env_domains is not None:
+        env_domains = env_domains.split(',')
 
-    parser.add_argument("-d", "--domains", nargs="+", help="List of domain names (e.g.,-d example.com example2.com)", default=env_onecome_domains)
-    parser.add_argument("-i", "--ip", help="IP address ('AUTO', or IP)", default=os.environ.get("ONECOM_IP", "AUTO"))
+    parser.add_argument("-d", "--domains", nargs="+", help="List of domain names (e.g.,-d example.com example2.com)", default=env_domains)
+    parser.add_argument("-i", "--ip", help="IP address ('AUTO', or IP)", default=os.environ.get("IP", "AUTO"))
 
-    env_onecom_force = os.environ.get("ONECOM_FORCE_DNS_UPDATE")
-    if env_onecom_force is not None:
-        env_onecom_force = env_onecom_force.lower()
+    env_force = os.environ.get("FORCE_DNS_UPDATE")
+    if env_force is not None:
+        env_force = env_force.lower()
 
-    parser.add_argument("-f", "--force-update", action="store_true", help="Force DNS update (skip IP check)", default=env_onecom_force)
-    parser.add_argument("-t", "--ttl", type=int, help="TTL value for DNS records", default=os.environ.get("ONECOM_TTL"))
-    parser.add_argument("-y", "--skip-confirmation", action="store_true", help="Skip confirmation prompts", default=os.environ.get("ONECOM_SKIP_CONFIRMATION"))
+    parser.add_argument("-f", "--force-update", action="store_true", help="Force DNS update (skip IP check)", default=env_force)
+    parser.add_argument("-t", "--ttl", type=int, help="TTL value for DNS records", default=os.environ.get("TTL"))
+    parser.add_argument("-y", "--skip-confirmation", action="store_true", help="Skip confirmation prompts", default=os.environ.get("SKIP_CONFIRMATION"))
 
     args = parser.parse_args()
 
     # Basic validation (ONLY IF validate_required is True)
     if validate_required:
         if not args.username:
-            raise ValueError("Username is required (command-line or ONECOM_USERNAME env var)")
+            raise ValueError("Username is required (command-line or USERNAME env var)")
         if not args.password:
-            raise ValueError("Password is required (command-line or ONECOM_PASSWORD env var)")
+            raise ValueError("Password is required (command-line or PASSWORD env var)")
         if not args.domains:
-            raise ValueError("Domain is required (command-line or ONECOM_DOMAIN env var)")
+            raise ValueError("Domain is required (command-line or DOMAIN env var)")
 
     # Handle IP address retrieval
     if args.ip == "AUTO":
