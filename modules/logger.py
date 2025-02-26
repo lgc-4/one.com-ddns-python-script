@@ -1,3 +1,4 @@
+# modules/logger.py
 import logging
 
 GRAY = '\033[90m'

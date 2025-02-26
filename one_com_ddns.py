@@ -30,7 +30,6 @@ import modules.dns_utils as dns_utils
 import modules.one_com_config as config
 import modules.one_com_api as one_com_api
 import modules.logger as logger_module  # Import the logger module
-import logging
 
 logger = logger_module.setup_logging()  # Setup logging
 

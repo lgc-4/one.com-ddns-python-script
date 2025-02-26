@@ -45,13 +45,19 @@ def get_custom_records(session, domain):
         get_res = response.text
         if not get_res:
             raise ValueError("Empty response from API")
-        return json.loads(get_res)["result"]["data"]
+        data = json.loads(get_res)
+        records = data["result"]["data"]
+        # Validate that the records are in the expected list format.
+        if not isinstance(records, list):
+            raise TypeError("DNS records are not in the expected list format")
+        return records
     except requests.exceptions.RequestException as e:
         logger.error(f"Error fetching DNS records for domain: {domain}. HTTP Status Code: {e.response.status_code if e.response else 'N/A'}")
         raise SystemExit(f"Failed to get DNS records for domain {domain}: {e}") from e
-    except (json.JSONDecodeError, KeyError, TypeError) as e:
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
         logger.error(f"Error parsing JSON response for domain: {domain}. Response text was: {get_res}")
         raise SystemExit(f"Failed to parse DNS records JSON for domain {domain}: {e}") from e
+
 
 def find_id_by_subdomain(records, subdomain):
     extracted_subdomain = tldextract.extract(subdomain).subdomain
