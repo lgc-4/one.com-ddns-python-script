@@ -1,13 +1,12 @@
 '''
-
     #################################
-    ##                             ##
-    ##     one.com DDNS Script     ##
-    ##                             ##
+    ##                               ##
+    ##    one.com DDNS Script        ##
+    ##                               ##
     #################################
-    | Version      | 2.4            |
+    | Version       | 2.4             |
     +--------------+----------------+
-    | Last Updated | 2023-10-05     |
+    | Last Updated | 2023-10-05       |
     +--------------+----------------+
 
     +----------------+-------------------------+
@@ -15,8 +14,6 @@
     +----------------+-------------------------+
     | Contributors   | Vigge                   |
     +----------------+-------------------------+
-
-
 
 
     Note:
@@ -27,168 +24,99 @@
 
         If you have any problems or suggestions, please open an issue
         on github or send me an email (main@lugico.de)
-
 '''
 
+import modules.dns_utils as dns_utils
+import modules.one_com_config as config
+import modules.one_com_api as one_com_api
+import modules.logger as logger_module  # Import the logger module
+import logging
 
+logger = logger_module.setup_logging()  # Setup logging
 
-# YOUR ONE.COM LOGIN
-USERNAME="email.address@example.com"
-PASSWORD="Your Beautiful Password"
+# #################################
+# ##                            ##
+# ##    HARDCODED VALUES        ##
+# ##                            ##
+# #################################
+# If you wish to hardcode values below and disable cli/env parsing set validate_required=False
+settings = config.parse_config(validate_required=True)
 
-# YOUR DOMAIN ( NOT www.example.com, only example.com )"
-DOMAIN="example.com"
+# ONE.COM LOGIN
+USERNAME = settings.username
+PASSWORD = settings.password
 
-# LIST OF SUBDOMAINS YOU WANT POINTING TO YOUR IP
-SUBDOMAINS = ["myddns"]
-# SUBDOMAINS = ["mutiple", "subdomains"]
+# YOUR DOMAIN (NOT www.example.com, www2.example.com)
+DOMAINS = settings.domains
 
+# YOUR IP ADDRESS. DEFAULTS TO RESOLVING VIA ipify.org, set to 'ARG' to take from script argument
+IP = settings.ip
 
-# YOUR IP ADDRESS.
-IP='AUTO'
-# '127.0.0.1' -> IP  Address
-# 'AUTO'      -> Automatically detect using ipify.org
-# 'ARG'       -> Read from commandline argument ($ python3 ddns.py 127.0.0.1)
+# FORCE UPDATE DNS RECORD
+FORCE_UPDATE = settings.force_update
 
+# TTL VALUE FOR DNS RECORD
+TTL = settings.ttl
 
-# CHECK IF IP ADDRESS HAS CHANGED SINCE LAST SCRIPT EXECUTION?
-CHECK_IP_CHANGE = True
-# True = only continue when IP has changed
-# False = always continue
+# SKIP CONFIRMATION
+SKIP_CONFIRMATION = settings.skip_confirmation
 
-# PATH WHERE THE LAST IP SHOULD BE SAVED INBETWEEN SCRIPT EXECUTIONS
-# not needed CHECK_IP_CHANGE is false
-LAST_IP_FILE = "lastip.txt"
+# Create login session - Session is created only once outside the domain loop
+s = one_com_api.login_session(USERNAME, PASSWORD)
 
+# loop through list of domains
+for DOMAIN in DOMAINS:
+    print()
+    logger.info(f"Processing domain: {DOMAIN}")
+    one_com_api.select_admin_domain(s, DOMAIN)  # Select domain at the beginning of each domain loop
 
-import requests
-import json
-import sys
+    # get dns records for the current domain
+    records = one_com_api.get_custom_records(s, DOMAIN)
 
-if IP == 'AUTO':
-    print("Fetching IP Address...")
-    try:
-        IP = requests.get("https://api.ipify.org/").text
-    except requests.ConnectionError:
-        raise SystemExit("Failed to get IP Address from ipify")
-    print(f"Detected IP: {IP}")
-elif IP == 'ARG':
-    if (len(sys.argv) < 2):
-        raise SystemExit('No IP Address provided in commandline arguments')
+    # Check current IP from DNS
+    logger.info(f"Attempting to get current DNS IP for: {DOMAIN}")
+    current_dns_ip_info = dns_utils.get_ip_and_ttl(DOMAIN)
+
+    if current_dns_ip_info:
+        current_dns_ip, current_ttl = current_dns_ip_info
+        logger.info(f"Current DNS IP for {DOMAIN}: {current_dns_ip}, TTL: {current_ttl}")
+
+        if not FORCE_UPDATE and current_dns_ip == IP:
+            logger.info(f"IP Address hasn't changed for {DOMAIN}. Aborting update for this domain.")
+            continue
+
+        # change ip address
+        record_obj = one_com_api.find_id_by_subdomain(records, DOMAIN)
+        if record_obj is None:
+            logger.error(f"Record '{DOMAIN}' could not be found.")
+            continue
+
+        # Ask for confirmation before changing
+        logger.warning(f"Changing IP for {DOMAIN} from {current_dns_ip} to {IP} with TTL {TTL}.")
+        if settings.skip_confirmation:
+            one_com_api.change_ip(s, record_obj, DOMAIN, IP, TTL)
+        else:
+            confirmation = input("Do you want to proceed? (y/n): ")
+            if confirmation.lower() == 'y':
+                one_com_api.change_ip(s, record_obj, DOMAIN, IP, TTL)
+            else:
+                logger.info(f"Update for {DOMAIN} cancelled.")
+
     else:
-        IP = sys.argv[1]
+        logger.warning(f"Could not retrieve current DNS IP for {DOMAIN} after multiple retries. Proceeding with update anyway.")
+        record_obj = one_com_api.find_id_by_subdomain(records, DOMAIN)
+        if record_obj is None:
+            logger.error(f"Record '{DOMAIN}' could not be found.")
+            continue
 
-if CHECK_IP_CHANGE:
-    try:
-        # try to read file
-        with open(LAST_IP_FILE,"r") as f:
-            if (IP == f.read()):
-                # abort if ip in file is same as current
-                print("IP Address hasn't changed. Aborting")
-                exit()
-    except IOError:
-        pass
+        logger.info(f"Changing IP for {DOMAIN} to {IP} with TTL {TTL}.")
+        if settings.skip_confirmation:
+            one_com_api.change_ip(s, record_obj, DOMAIN, IP, TTL)
+        else:
+            confirmation = input("Do you want to proceed? (y/n): ")
+            if confirmation.lower() == 'y':
+                one_com_api.change_ip(s, record_obj, DOMAIN, IP, TTL)
+            else:
+                logger.info(f"Update for {DOMAIN} cancelled.")
 
-    # write current ip to file
-    with open(LAST_IP_FILE,"w") as f:
-        f.write(IP)
-
-
-def findBetween(haystack, needle1, needle2):
-    index1 = haystack.find(needle1) + len(needle1)
-    index2 = haystack.find(needle2, index1 + 1)
-    return haystack[index1 : index2]
-
-
-# will create a requests session and log you into your one.com account in that session
-def loginSession(USERNAME,  PASSWORD, TARGET_DOMAIN=''):
-    print("Logging in...")
-
-    # create requests session
-    session = requests.session()
-
-    # get admin panel to be redirected to login page
-    redirectmeurl = "https://www.one.com/admin/"
-    try:
-        r = session.get(redirectmeurl)
-    except requests.ConnectionError:
-        raise SystemExit("Connection to one.com failed.")
-
-    # find url to post login credentials to from form action attribute
-    substrstart = '<form id="kc-form-login" class="Login-form login autofill" onsubmit="login.disabled = true; return true;" action="'
-    substrend = '"'
-    posturl = findBetween(r.text, substrstart, substrend).replace('&amp;','&')
-
-    # post login data
-    logindata = {'username': USERNAME, 'password': PASSWORD, 'credentialId' : ''}
-    response = session.post(posturl, data=logindata)
-    if response.text.find("Invalid username or password.") != -1:
-        print("!!! - Invalid credentials. Exiting")
-        exit(1)
-
-    print("Login successful.")
-
-    # For accounts with multiple domains it seems to still be needed to select which target domain to operate on.
-    if TARGET_DOMAIN:
-        print("Setting active domain to: {}".format(TARGET_DOMAIN))
-        selectAdminDomain(session, TARGET_DOMAIN)
-
-    return session
-
-
-def selectAdminDomain(session, DOMAIN):
-    request_str = "https://www.one.com/admin/select-admin-domain.do?domain={}".format(DOMAIN)
-    session.get(request_str)
-
-
-# gets all DNS records on your domain.
-def getCustomRecords(session, DOMAIN):
-    print("Getting Records")
-    getres = session.get("https://www.one.com/admin/api/domains/" + DOMAIN + "/dns/custom_records").text
-    if len(getres) == 0:
-        print("!!! - No records found. Exiting")
-        exit()
-    return json.loads(getres)["result"]["data"]
-
-
-# finds the record id of a record from it's subdomain
-def findIdBySubdomain(records, subdomain):
-    print("searching domain '" + subdomain + "'")
-    for obj in records:
-        if obj["attributes"]["prefix"] == subdomain:
-            print("Found Domain '" + subdomain + "': " + obj["id"])
-            return obj["id"]
-    return ""
-
-
-# changes the IP Address of a TYPE A record. Default TTL=3800
-def changeIP(session, ID, DOMAIN, SUBDOMAIN, IP, TTL=3600):
-    print("Changing IP on subdomain '" + SUBDOMAIN + "' - ID '" + ID + "' TO NEW IP '" + IP + "'")
-
-    tosend = {"type":"dns_service_records","id":ID,"attributes":{"type":"A","prefix":SUBDOMAIN,"content":IP,"ttl":TTL}}
-
-    dnsurl="https://www.one.com/admin/api/domains/" + DOMAIN + "/dns/custom_records/" + ID
-
-    sendheaders={'Content-Type': 'application/json'}
-
-    session.patch(dnsurl, data=json.dumps(tosend), headers=sendheaders)
-
-    print("Sent Change IP Request")
-
-
-
-# Create login session
-s = loginSession(USERNAME, PASSWORD, DOMAIN)
-
-# get dns records
-records = getCustomRecords(s, DOMAIN)
-#print(records)
-
-# loop through list of subdomains
-for subdomain in SUBDOMAINS:
-    #change ip address
-    recordid = findIdBySubdomain(records, subdomain)
-    if recordid == "":
-        print("!!! - Record '" + subdomain + "' could not be found.")
-        continue
-    changeIP(s, recordid, DOMAIN, subdomain, IP, 600)
+logger.info("DDNS update process completed.")
