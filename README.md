@@ -2,6 +2,26 @@
 
 The name is pretty self explanatory. It's a Python script for updating type A DNS records at one.com.
 
+**Important Note:**
+This repository is no longer actively maintained. However there are a couple forks that have gotten somewhat recent updates and expanded upon the features of this script.
+
+## Nephim - one.com-ddns-python-script
+<https://github.com/Nephim/one.com-ddns-python-script/>
+
+Features include:
+- Stateless IP Checking
+- Modular Architecture
+- Runtime Configurability
+- Enhanced Logging & Safety
+- Unit testing
+
+## nilscript - one-solution
+<https://github.com/nilscript/one-solution>
+
+Features include:
+- external configuration via `.ini` file
+
+
 ## Required Packages
 - `requests`
 - `json`
